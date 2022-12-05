@@ -26,8 +26,6 @@ import { runAppleScript } from "run-applescript";
 import { searchSpotlight } from "./search-spotlight";
 import { FolderSearchPlugin, SpotlightSearchResult } from "./types";
 
-import fse, { exists } from "fs-extra";
-
 import {
   loadPlugins,
   folderName,
@@ -37,6 +35,9 @@ import {
   maybeMoveResultToTrash,
   lastUsedSort,
 } from "./utils";
+
+import fse, { exists } from "fs-extra";
+import path = require("node:path");
 
 // allow string indexing on Icons
 interface IconDictionary {
@@ -103,11 +104,11 @@ export default function Command() {
   
     return itemsPaths
     `;
-  
+
     const response = await runAppleScript(applescript);
     return response === "" ? [] : response.split("\r");
   }
-  
+
   // check prefs
   usePromise(
     async () => {
@@ -299,7 +300,7 @@ export default function Command() {
                   icon={Icon.Folder}
                   shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
                   onAction={async () => {
-                    const path = require('node:path');
+                    //const path = require('node:path');
                     const selectedItems = await getFinderSelection();
 
                     if (selectedItems.length === 0) {
@@ -308,49 +309,48 @@ export default function Command() {
                       for (const item of selectedItems) {
                         // Source path = item
                         // Source file name = path.basename(item)
-                        // 
+                        //
                         // Destination folder = result.path
                         // Destination file = result.path + '/' + path.basename(item)
 
-                        const sourceFileName = path.basename(item)
+                        const sourceFileName = path.basename(item);
                         const destinationFolder = result.path;
-                        const destinationFile = result.path + '/' + path.basename(item);
+                        const destinationFile = result.path + "/" + path.basename(item);
 
                         try {
-                          const exists = await fse.pathExists(destinationFile)
+                          const exists = await fse.pathExists(destinationFile);
                           if (exists) {
-                            const overwrite = await confirmAlert({ title: "Ooverwrite the existing file?", message: sourceFileName + ' already exists in ' + destinationFolder });
+                            const overwrite = await confirmAlert({
+                              title: "Ooverwrite the existing file?",
+                              message: sourceFileName + " already exists in " + destinationFolder,
+                            });
 
                             if (overwrite) {
                               console.debug("moving and overwriting");
-                              if (item == destinationFile)
-                              {
-                                await showHUD('The source and destination file are the same');
+                              if (item == destinationFile) {
+                                await showHUD("The source and destination file are the same");
                               }
                               fse.moveSync(item, destinationFile, { overwrite: true });
-                              await showHUD('Moved file ' + path.basename(item) + ' to ' + destinationFolder);
+                              await showHUD("Moved file " + path.basename(item) + " to " + destinationFolder);
                             } else {
                               console.debug("cancelling");
-                              await showHUD('Cancelling move');
+                              await showHUD("Cancelling move");
                             }
-                          }
-                          else {
+                          } else {
                             fse.moveSync(item, destinationFile);
-                            await showHUD('Moved file ' + sourceFileName + ' to ' + destinationFolder);
+                            await showHUD("Moved file " + sourceFileName + " to " + destinationFolder);
                           }
 
                           open(result.path);
-                        }
-                        catch (e) {
-                          console.error('ERROR ' + String(e));
-                          await showToast(Toast.Style.Failure, 'Error moving file ' + String(e));
+                        } catch (e) {
+                          console.error("ERROR " + String(e));
+                          await showToast(Toast.Style.Failure, "Error moving file " + String(e));
                         }
                       }
                     }
 
                     closeMainWindow();
                     popToRoot({ clearSearchBar: true });
-
                   }}
                 />
                 <Action.OpenWith
