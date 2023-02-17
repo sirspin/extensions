@@ -1,7 +1,13 @@
 import { Action, ActionPanel, Form } from "@raycast/api";
 import { IntervalFormValues, Item } from "../types";
 import { nanoid } from "nanoid";
-import { calculateInterval, emptyOrNumber, requiresNumberGreaterThan, secondsToTime, setsToSeconds } from "../utils";
+import {
+  calculateInterval,
+  emptyOrNumberGreaterThan,
+  requiresNumberGreaterThan,
+  secondsToTime,
+  setsToSeconds,
+} from "../utils";
 import { FormValidation, useForm } from "@raycast/utils";
 
 export function IntervalForm(props: { item?: Item; onSave: (item: Item) => void }) {
@@ -32,16 +38,16 @@ export function IntervalForm(props: { item?: Item; onSave: (item: Item) => void 
     validation: {
       title: FormValidation.Required,
       warmup: (value) => {
-        return emptyOrNumber(value);
+        return emptyOrNumberGreaterThan(value, 1);
       },
       cooldown: (value) => {
-        return emptyOrNumber(value);
+        return emptyOrNumberGreaterThan(value, 1);
       },
       high: (value) => {
-        return requiresNumberGreaterThan(value, 0);
+        return requiresNumberGreaterThan(value, 2);
       },
       low: (value) => {
-        return requiresNumberGreaterThan(value, 0);
+        return requiresNumberGreaterThan(value, 2);
       },
       sets: (value) => {
         return requiresNumberGreaterThan(value, 1);
@@ -69,8 +75,18 @@ export function IntervalForm(props: { item?: Item; onSave: (item: Item) => void 
       <Form.TextField title="Title" placeholder="My awesome interval" {...itemProps.title} />
       <Form.TextField title="Subtitle" placeholder="The best ever!" {...itemProps.subtitle} />
       <Form.Description title="Info" text="All intervals are shown in seconds" />
-      <Form.TextField title="Warmup" placeholder="0" info="Optional Warmup" {...itemProps.warmup} />
-      <Form.TextField title="Cooldown" placeholder="0" info="Optional Cooldown" {...itemProps.cooldown} />
+      <Form.TextField
+        title="Warmup"
+        placeholder="2"
+        info="Optional Warmup - leave blank or add at least 2 seconds"
+        {...itemProps.warmup}
+      />
+      <Form.TextField
+        title="Cooldown"
+        placeholder="2"
+        info="Optional Cooldown - leave blank or add at least 2 seconds"
+        {...itemProps.cooldown}
+      />
       <Form.TextField title="High" placeholder="30" {...itemProps.high} />
       <Form.TextField title="Low" placeholder="90" {...itemProps.low} />
       <Form.TextField title="Sets" placeholder="6" {...itemProps.sets} />
@@ -78,7 +94,7 @@ export function IntervalForm(props: { item?: Item; onSave: (item: Item) => void 
         title="Current Interval"
         text={`${secondsToTime(
           setsToSeconds(
-            parseInt(itemProps.sets.value || "2"),
+            parseInt(itemProps.sets.value || "0"),
             parseInt(itemProps.high.value || "0"),
             parseInt(itemProps.low.value || "0"),
             parseInt(itemProps.warmup.value || "0"),

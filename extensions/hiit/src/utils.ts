@@ -17,19 +17,20 @@ export const calculateInterval = (sets: number, warmup: number, cooldown: number
   return intervals;
 };
 
-export const emptyOrNumber = (value: string | undefined) => {
+export const emptyOrNumberGreaterThan = (value: string | undefined, minValue?: number) => {
   if (value?.length && isNaN(parseInt(value))) {
     return "Please enter a number";
+  }
+  if (minValue && value && value <= minValue.toString()) {
+    return `Please select a number greater than ${minValue}`;
   }
 };
 
 export const requiresNumberGreaterThan = (value: string | undefined, minValue?: number) => {
-  if (!value?.length) {
+  if (!value?.length || (value && isNaN(parseInt(value)))) {
     return "Please enter a number";
   }
-  if (value && isNaN(parseInt(value))) {
-    return "Please enter a number";
-  }
+
   if (minValue && value && value <= minValue.toString()) {
     return `Please select a number greater than ${minValue}`;
   }
