@@ -1,44 +1,48 @@
-import { isBefore, isSameDay } from "date-fns";
+import { Action, ActionPanel, Icon, List } from "@raycast/api";
 import { useMemo } from "react";
 
-import { getToday } from "../helpers/dates";
+import CreateTask from "../create-task";
 import { groupByDueDates } from "../helpers/groupBy";
 import { getTasksForTodayOrUpcomingView } from "../helpers/tasks";
 import { QuickLinkView } from "../home";
 import useCachedData from "../hooks/useCachedData";
 import useViewTasks from "../hooks/useViewTasks";
 
+import CreateViewAction from "./CreateViewAction";
 import TaskListSections from "./TaskListSections";
-import TodayEmptyView from "./TodayEmptyView";
 
-type TodayTasksProps = { quickLinkView: QuickLinkView };
+type UpcomingTasksProps = { quickLinkView: QuickLinkView };
 
-export default function TodayTasks({ quickLinkView }: TodayTasksProps) {
+export default function UpcomingTasks({ quickLinkView }: UpcomingTasksProps) {
   const [data] = useCachedData();
 
   const tasks = useMemo(() => {
     if (!data) return [];
-
-    return getTasksForTodayOrUpcomingView(data.items, data.user.id).filter((t) => {
-      if (!t.due) return false;
-
-      return isBefore(new Date(t.due.date), getToday()) || isSameDay(new Date(t.due.date), getToday());
-    });
+    return getTasksForTodayOrUpcomingView(data.items, data.user.id);
   }, [data]);
 
-  let sections = [];
-
   const {
-    sections: groupedSections,
-    viewProps,
     sortedTasks,
-  } = useViewTasks("todoist.today", { tasks, data, optionsToExclude: ["date"] });
-
-  sections = viewProps.groupBy?.value === "default" ? groupByDueDates(sortedTasks) : groupedSections;
+    viewProps: { orderBy, sortBy },
+  } = useViewTasks("todoist.upcoming", { tasks, data, optionsToExclude: ["date"] });
 
   if (tasks.length === 0) {
-    return <TodayEmptyView quickLinkView={quickLinkView} />;
+    return (
+      <List.EmptyView
+        title="You don't have any upcoming tasks."
+        description="How about adding a new task?"
+        actions={
+          <ActionPanel>
+            <Action.Push title="Create Task" icon={Icon.Plus} target={<CreateTask />} />
+
+            <CreateViewAction {...quickLinkView} />
+          </ActionPanel>
+        }
+      />
+    );
   }
 
-  return <TaskListSections sections={sections} viewProps={viewProps} quickLinkView={quickLinkView} />;
+  const sections = groupByDueDates(sortBy?.value === "default" ? tasks : sortedTasks);
+
+  return <TaskListSections sections={sections} viewProps={{ orderBy, sortBy }} quickLinkView={quickLinkView} />;
 }
