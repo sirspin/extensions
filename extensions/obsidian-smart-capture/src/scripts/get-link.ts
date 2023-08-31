@@ -25,7 +25,18 @@ else if "Google Chrome" is in activeApp then
             error "Chrome is not displaying a web page!"
         end if
     end tell
+ else if "Arc" is in activeApp then
+    tell application "Arc"
+        if (exists active tab of front window) then
+            set activeTab to active tab of front window
+            set tabURL to URL of activeTab
+            set tabTitle to title of activeTab
+            return tabURL & "\\t" & tabTitle
+        else
+            error "Arc is not displaying a web page!"
+        end if
+    end tell
 else
-    error "Safari or Google Chrome is not in focus. Please switch to either Safari or Chrome and try again."
+    error "Safari or Google Chrome or Arc is not in focus. Please switch to either Safari or Chrome and try again."
 end if
 `;
